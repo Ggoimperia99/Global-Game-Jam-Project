@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class NPC1 : MonoBehaviour
 {
+    public GameManClass refGameMan;
     // Text UI white bloc and text UI
     [SerializeField] TextMeshProUGUI textUI;
     [SerializeField] GameObject textBloc;
@@ -23,9 +24,9 @@ public class NPC1 : MonoBehaviour
     [SerializeField] bool playerItemCollected = false;
 
     // Check player state
-    bool introducingToPlayer = false;
-    bool completingPlayer = false;
-    bool playerIntroduced = false;
+    public bool introducingToPlayer = false;
+    public bool completingPlayer = false;
+    public bool playerIntroduced = false;
 
     // Dialogue length limit check
     int introIndex = 0;
@@ -36,7 +37,7 @@ public class NPC1 : MonoBehaviour
 
     // Cache
     string textToPrint;
-    PlayerMove player;
+   // PlayerMove player;
     CircleCollider2D myTriggerCollider;
 
     // Start is called before the first frame update
@@ -44,7 +45,6 @@ public class NPC1 : MonoBehaviour
     {
         numberOfIntroDialogues = introDialogues.Length;
         numberOfComplDialogues = completionDialogues.Length;
-        player = FindObjectOfType<PlayerMove>();
         myTriggerCollider = GetComponent<CircleCollider2D>();
     }
 
@@ -58,12 +58,12 @@ public class NPC1 : MonoBehaviour
             {
                 PrintIntroDialogue(introIndex++);
             }
-            else if (Input.GetKeyUp(KeyCode.Return) && introIndex == numberOfIntroDialogues)
+            else if (Input.GetKeyDown(KeyCode.Return) && introIndex == numberOfIntroDialogues)
             {
+                Debug.Log("Finish intro");
                 introducingToPlayer = false;
                 playerIntroduced = true;
-                textBloc.SetActive(false);
-                player.canMoveNow();
+                refGameMan.dialogueinAction = false;
             }
         }
 
@@ -77,8 +77,7 @@ public class NPC1 : MonoBehaviour
             else if (Input.GetKeyUp(KeyCode.Return) && complIndex == numberOfComplDialogues)
             {
                 completingPlayer = false;
-                textBloc.SetActive(false);
-                player.canMoveNow();
+                refGameMan.dialogueinAction = false;
                 myTriggerCollider.enabled = false;
             }
         }
@@ -88,11 +87,10 @@ public class NPC1 : MonoBehaviour
     {
         if(collision.tag == "Player" && !playerItemCollected && !playerIntroduced)
         {
-            textBloc.SetActive(true);
+            refGameMan.dialogueinAction = true;
             introducingToPlayer = true;
 
             PrintIntroDialogue(introIndex);
-            player.playerNoMove();
         }
         else if(collision.tag == "Player" && !playerItemCollected && playerIntroduced)
         {
@@ -100,11 +98,10 @@ public class NPC1 : MonoBehaviour
         }
         else if(collision.tag == "Player" && playerItemCollected && playerIntroduced)
         {
-            textBloc.SetActive(true);
+            refGameMan.dialogueinAction = true;
             completingPlayer = true;
 
             PrintComplDialogue(complIndex);
-            player.playerNoMove();
         }
     }
 
