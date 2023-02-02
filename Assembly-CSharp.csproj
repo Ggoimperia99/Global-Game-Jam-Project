@@ -57,9 +57,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets/Scripts/NPC1.cs" />
+    <Compile Include="Assets/Scripts/Door.cs" />
     <Compile Include="Assets/Scripts/DialogueInfo.cs" />
     <Compile Include="Assets/Scripts/PlayerMove.cs" />
-    <Compile Include="Assets/Door.cs" />
+    <Compile Include="Assets/Scripts/Gateway.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/TextMesh Pro/Shaders/TMPro.cginc" />
