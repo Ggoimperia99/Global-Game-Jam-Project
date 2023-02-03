@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class NewPlayerClass : MonoBehaviour
@@ -13,7 +14,8 @@ public class NewPlayerClass : MonoBehaviour
     public Rigidbody2D rigBod;
     public bool isGrounded;
     SpriteRenderer myRenderer;
-    AudioSource walkAudio;
+    [SerializeField] AudioSource walkAudio;
+    [SerializeField] AudioSource jumpAudio;
   
 
     [Header("LR Move")]
@@ -28,8 +30,8 @@ public class NewPlayerClass : MonoBehaviour
     public int extraJumpsValue;
 
     //gliding
-    public float glideTimer;
     public float glideForce;
+    public int SpaceCounter;
 
     //Animation
     public Animator Anim;
@@ -42,7 +44,6 @@ public class NewPlayerClass : MonoBehaviour
     {
         extraJumps = extraJumpsValue;
         myRenderer = GetComponent<SpriteRenderer>();
-        walkAudio = GetComponent<AudioSource>();
     }
 
     private void FixedUpdate()
@@ -56,15 +57,20 @@ public class NewPlayerClass : MonoBehaviour
         }
         if (myPlayerStates == PlayerStates.Gliding)
         {
-           
+
             LRMovement();
             //yeets player
             //rigBod.AddForce(Vector2.up * glideForce);
+            //why updraft
 
             if (isGrounded == true)
             {
                 myPlayerStates = PlayerStates.Standing;
             }
+        }
+        if (myPlayerStates == PlayerStates.Empty)
+        {
+
         }
     }
 
@@ -88,19 +94,30 @@ public class NewPlayerClass : MonoBehaviour
         {
 
         }
+
+        // set gliding animation
+        if(myPlayerStates == PlayerStates.Gliding)
+        {
+            Anim.SetBool("IsGliding", true);
+        }
+        else if(myPlayerStates != PlayerStates.Gliding)
+        {
+            Anim.SetBool("IsGliding", false);
+        }
+
     }
 
     void Gravity()
     {
         if (myPlayerStates == PlayerStates.Standing)
         {
-            GetComponent<Rigidbody2D>().mass = 1;
+            GetComponent<Rigidbody2D>().mass = 4;
             GetComponent<Rigidbody2D>().gravityScale = 6;
         }
         else if (myPlayerStates == PlayerStates.Gliding)
         {
-            GetComponent<Rigidbody2D>().mass = 0;
-            GetComponent<Rigidbody2D>().gravityScale = 0;
+            GetComponent<Rigidbody2D>().mass = 1;
+            GetComponent<Rigidbody2D>().gravityScale = 2;
         }
     }
 
@@ -108,25 +125,32 @@ public class NewPlayerClass : MonoBehaviour
     {
         //LR Movement Input
         horizInput = Input.GetAxis("Horizontal");
+
+        //jumping
         if (Input.GetKeyDown(KeyCode.Space) && extraJumps > 0)
         {
-            rigBod.velocity = Vector2.up * jumpForce;
+            //rigBod.velocity = Vector2.up * jumpForce;
             extraJumps -= 1;
         }
         if (Input.GetKeyDown(KeyCode.Space) && extraJumps == 0 && isGrounded == true)
         {
             rigBod.velocity = Vector2.up * jumpForce;
         }
+
+        //gliding
         if (Input.GetKey(KeyCode.Space))
         {
             if (isGrounded == false)
             {
-                glideTimer += Time.deltaTime;
+                if (SpaceCounter > 2)
+                {
+                    myPlayerStates = PlayerStates.Gliding;
+                }
             }
         }
-        if (glideTimer > 0.5f)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            myPlayerStates = PlayerStates.Gliding;
+            SpaceCounter += 1;
         }
     }
 
@@ -136,7 +160,7 @@ public class NewPlayerClass : MonoBehaviour
         rigBod.velocity = new Vector2((horizInput * speed), rigBod.velocity.y);
         AnimRunning = true;
 
-        //flip sprite 
+        /*//flip sprite 
         if (rigBod.velocity.x > 0)
         {
             transform.localScale = new Vector3(1.5f, transform.localScale.y, transform.localScale.z);
@@ -144,7 +168,7 @@ public class NewPlayerClass : MonoBehaviour
         if (rigBod.velocity.x < 0)
         {
             transform.localScale = new Vector3(-1.5f, transform.localScale.y, transform.localScale.z);
-        }
+        }*/
 
         // Setting running animation
         if(Mathf.Abs(horizInput) > Mathf.Epsilon && isGrounded)
@@ -164,6 +188,7 @@ public class NewPlayerClass : MonoBehaviour
         if(rigBod.velocity.y > Mathf.Epsilon && !isGrounded)
         {
             Anim.SetBool("IsJumping", true);
+            Anim.SetBool("IsFalling", false);
 
             isRunning = false;
         }
@@ -187,9 +212,10 @@ public class NewPlayerClass : MonoBehaviour
     {
         if (collision.gameObject.tag == "Floor")
         {
-            glideTimer = 0;
+            SpaceCounter = 0;
             isGrounded = true;
         }
+        print(collision.gameObject.name);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -211,13 +237,14 @@ public class NewPlayerClass : MonoBehaviour
 
     private void FlipSprite()
     {
-        if(rigBod.velocity.x >= -0.01f)
+        if(rigBod.velocity.x > 0.01f)
         {
-            myRenderer.flipX = false;
+            transform.localScale = new Vector2(1.5f, transform.localScale.y);
         }
         if(rigBod.velocity.x < -0.01f)
         {
-            myRenderer.flipX = true;
+            //myRenderer.flipX = true;
+            transform.localScale = new Vector2(-1.5f, transform.localScale.y);
         }
     }
 
@@ -231,6 +258,11 @@ public class NewPlayerClass : MonoBehaviour
         {
             walkAudio.enabled = false;
         }
+    }
+
+    public void playJumpAudio()
+    {
+        jumpAudio.Play();
     }
 
     /*void Animations()
